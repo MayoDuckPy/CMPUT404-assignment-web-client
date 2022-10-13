@@ -99,7 +99,6 @@ class HTTPClient(object):
             buffer.extend(part)
 
         # Check if server sends us content length
-        content_length = 0
         headers = self.get_headers(buffer.decode())
         if not headers or 'content-length' not in headers.keys():
             # No Content-Length; use old-fashioned recvall
