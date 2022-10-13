@@ -110,7 +110,7 @@ class HTTPClient(object):
 
                 buffer.extend(part)
 
-            return buffer.decode()  # Assume no content
+            return buffer.decode()
 
         content_length = int(headers['content-length'])
         content_length -= len(buffer.split(header_delimiter)[1])
@@ -143,6 +143,23 @@ class HTTPClient(object):
         code = self.DEFAULT_CODE
         body = self.DEFAULT_BODY
 
+        # Post data in args
+        fields = ''
+        if args and type(args) is dict:
+            for field, value in args.items():
+                fields += f'{field}={value}&'
+
+        fields = fields[:-1]
+        host, port, path = self.get_host_port_path(url)
+        request = f'POST {path} HTTP/1.1{CR}Host: {host}{CR}Content-Type: application/x-www-form-urlencoded{CR}Content-Length: {len(fields)}{CR}{CR}{fields}{CR}'
+
+        self.connect(host, port)
+        self.sendall(request)
+        data = self.get_response(self.socket)
+        self.disconnect()
+
+        code = self.get_code(data)
+        body = self.get_body(data)
         return HTTPResponse(code, body)
 
     def command(self, url, command='GET', args=None):
